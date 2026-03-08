@@ -26,15 +26,29 @@
             display: flex; justify-content: space-between; align-items: center;
             margin-top: 25px; padding: 0 5px;
         }
-        #clear-btn {
-            background: #95a5a6; color: white; border: none; padding: 6px 12px;
-            border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
-            transition: 0.2s;
+        
+        /* 버튼 공통 스타일 */
+        .btn-mini {
+            border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; 
+            font-size: 0.8rem; font-weight: bold; color: white; transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
         }
-        #clear-btn:active { background: #7f8c8d; }
+        #clear-btn { background: #95a5a6; }
+        #refresh-btn { background: #34495e; margin-left: 5px; }
+        .btn-mini:active { opacity: 0.7; transform: scale(0.95); }
 
         #chat-box { height: calc(100vh - 460px); min-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: #fff; border-radius: 10px; margin-top: 10px; }
         .audio-msg { width: 100%; margin-top: 5px; }
+
+        /* 상단 타이틀 바 정렬 */
+        .title-bar {
+            display: flex; justify-content: center; align-items: center; position: relative;
+            margin-bottom: 15px;
+        }
+        .reload-icon {
+            position: absolute; right: 0; background: none; border: none; 
+            font-size: 1.4rem; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -44,7 +58,10 @@
     </div>
 
     <div id="main-app">
-        <h1 style="text-align: center; font-size: 1.8rem;">🐧 PENG-Link CORE</h1>
+        <div class="title-bar">
+            <h1 style="margin: 0; font-size: 1.8rem;">🐧 PENG-Link CORE</h1>
+            <button onclick="location.reload()" class="reload-icon" title="새로고침">🔄</button>
+        </div>
 
         <div class="status-panel">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -68,8 +85,11 @@
         <button id="start">🎤 누르고 말하기 (PTT)</button>
         
         <div class="log-header">
-            <span style="font-size: 0.9rem; color: #7f8c8d; font-weight: bold;">COMMUNICATION LOGS</span>
-            <button id="clear-btn">기록 비우기 🗑️</button>
+            <span style="font-size: 0.8rem; color: #7f8c8d; font-weight: bold;">COMMUNICATION LOGS</span>
+            <div>
+                <button id="clear-btn" class="btn-mini">기록 비우기 🗑️</button>
+                <button onclick="location.reload()" id="refresh-btn" class="btn-mini">업데이트 🔄</button>
+            </div>
         </div>
 
         <div id="chat-box"></div>
@@ -118,7 +138,6 @@
             document.getElementById('main-app').style.pointerEvents = 'auto';
         };
 
-        // [추가] 기록 비우기 로직
         document.getElementById('clear-btn').onclick = () => {
             if (confirm('모든 무전 기록을 삭제하시겠습니까?')) {
                 chatBox.innerHTML = '';
