@@ -3,57 +3,48 @@
 <head>
     <title>PENG-Link 🐧</title>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        /* [KEEP] 레이아웃 및 기본 스타일 */
-        #entry-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(44, 62, 80, 0.95);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999;
-        }
-        #connect-btn {
-            padding: 20px 40px; font-size: 1.5rem; cursor: pointer;
-            border-radius: 50px; border: none; background: #3498db; color: white;
-            font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        #main-app { filter: blur(5px); pointer-events: none; padding: 20px; font-family: 'Malgun Gothic', sans-serif; max-width: 500px; margin: auto; }
+        /* [기존 스타일 유지] */
+        body { margin: 0; padding: 0; background-color: #f4f7f6; overflow-x: hidden; }
+        #entry-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        #connect-btn { padding: 20px 40px; font-size: 1.5rem; cursor: pointer; border-radius: 50px; border: none; background: #3498db; color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        #main-app { filter: blur(5px); pointer-events: none; padding: 15px; font-family: 'Malgun Gothic', sans-serif; width: 95%; max-width: 500px; margin: auto; box-sizing: border-box; }
         
-        /* [CORE] 스테이터스 패널 디자인 */
-        .status-panel {
-            background: #1a1a1a; color: #00ff00; padding: 20px; border-radius: 12px; 
-            margin-bottom: 20px; border: 2px solid #333; box-shadow: inset 0 0 10px #000;
-        }
+        .status-panel { background: #1a1a1a; color: #00ff00; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #333; box-shadow: inset 0 0 10px #000; }
         .antenna-box { display: flex; align-items: flex-end; gap: 4px; height: 24px; }
         .ant-bar { width: 7px; background: #333; border-radius: 1px; transition: 0.2s; }
         .ant-bar.active { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
-
         .listen-container { height: 12px; background: #222; border-radius: 6px; overflow: hidden; margin-top: 10px; border: 1px solid #333; }
-        #listen-bar { 
-            width: 0%; height: 100%; background: linear-gradient(90deg, #3498db, #00ff00); 
-            transition: width 0.3s ease; /* 동기화 진행바 느낌 */
-        }
+        #listen-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #3498db, #00ff00); transition: width 0.3s ease; }
 
-        #start { 
-            padding: 25px; font-size: 1.3rem; width: 100%; 
-            background: #2ecc71; color: white; border: none; border-radius: 15px;
-            cursor: pointer; font-weight: bold; transition: 0.2s;
-            box-shadow: 0 6px #27ae60; outline: none;
-        }
+        #start { padding: 25px 0; font-size: 1.5rem; width: 100%; background: #2ecc71; color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 6px #27ae60; outline: none; -webkit-tap-highlight-color: transparent; }
         #start:active { background: #e74c3c; transform: translateY(4px); box-shadow: 0 2px #c0392b; }
         
-        #chat-box { height: 350px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: #fff; border-radius: 10px; margin-top: 20px; }
+        /* [수정] 로그 제어 바 스타일 */
+        .log-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 25px; padding: 0 5px;
+        }
+        #clear-btn {
+            background: #95a5a6; color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
+            transition: 0.2s;
+        }
+        #clear-btn:active { background: #7f8c8d; }
+
+        #chat-box { height: calc(100vh - 460px); min-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background: #fff; border-radius: 10px; margin-top: 10px; }
         .audio-msg { width: 100%; margin-top: 5px; }
     </style>
 </head>
 <body>
-
     <div id="entry-layer">
         <h1 style="color: white; font-size: 3rem; margin-bottom: 10px;">🐧 PENG-Link</h1>
         <button id="connect-btn">펭링크 접속하기</button>
     </div>
 
     <div id="main-app">
-        <h1 style="text-align: center;">🐧 PENG-Link CORE</h1>
+        <h1 style="text-align: center; font-size: 1.8rem;">🐧 PENG-Link CORE</h1>
 
         <div class="status-panel">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -76,6 +67,11 @@
         
         <button id="start">🎤 누르고 말하기 (PTT)</button>
         
+        <div class="log-header">
+            <span style="font-size: 0.9rem; color: #7f8c8d; font-weight: bold;">COMMUNICATION LOGS</span>
+            <button id="clear-btn">기록 비우기 🗑️</button>
+        </div>
+
         <div id="chat-box"></div>
     </div>
 
@@ -89,6 +85,7 @@
         const antennaBars = document.querySelectorAll('.ant-bar');
         const statusText = document.getElementById('status-text');
         const statusIcon = document.getElementById('status-icon');
+        const chatBox = document.getElementById('chat-box');
 
         function setUIState(state) {
             if (state === 'recording') {
@@ -121,8 +118,16 @@
             document.getElementById('main-app').style.pointerEvents = 'auto';
         };
 
+        // [추가] 기록 비우기 로직
+        document.getElementById('clear-btn').onclick = () => {
+            if (confirm('모든 무전 기록을 삭제하시겠습니까?')) {
+                chatBox.innerHTML = '';
+                if (navigator.vibrate) navigator.vibrate(20);
+            }
+        };
+
         const startPTT = async () => {
-            audioChunks = []; // 버퍼 초기화
+            audioChunks = [];
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
@@ -131,25 +136,20 @@
                     if (e.data.size > 0) audioChunks.push(e.data);
                 };
 
-                // [핵심] 녹음이 멈췄을 때 한 번에 전송
                 mediaRecorder.onstop = () => {
                     setUIState('syncing');
                     const finalBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    
-                    // 파일 데이터와 아이디를 함께 전송
                     socket.emit('sync-audio-file', {
                         blob: finalBlob,
                         id: socket.id.substring(0, 5)
                     });
-
                     addAudioToChat('나', URL.createObjectURL(finalBlob));
-                    
-                    // 전송 완료 후 잠시 뒤 대기상태로
                     setTimeout(() => setUIState('standby'), 800);
                 };
 
                 mediaRecorder.start();
                 setUIState('recording');
+                if (navigator.vibrate) navigator.vibrate(50);
             } catch (err) { console.error(err); }
         };
 
@@ -157,6 +157,7 @@
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                if (navigator.vibrate) navigator.vibrate(30);
             }
         };
 
@@ -164,16 +165,13 @@
         btn.addEventListener('mousedown', startPTT);
         btn.addEventListener('mouseup', stopPTT);
         btn.addEventListener('touchstart', (e) => { e.preventDefault(); startPTT(); });
-        btn.addEventListener('touchend', stopPTT);
+        btn.addEventListener('touchend', (e) => { e.preventDefault(); stopPTT(); });
 
-        // [핵심] 상대방이 보낸 완성된 파일 수신
         socket.on('receive-sync-audio', (data) => {
             setUIState('receiving');
             const blob = new Blob([data.blob], { type: 'audio/webm' });
             const url = URL.createObjectURL(blob);
-            
-            addAudioToChat(data.id, url, true); // true: 자동 재생
-            
+            addAudioToChat(data.id, url, true);
             setTimeout(() => setUIState('standby'), 2000);
         });
 
@@ -181,8 +179,7 @@
             const div = document.createElement('div');
             div.style.padding = "10px";
             div.style.borderBottom = "1px solid #eee";
-            div.innerHTML = `<b>[${id}]</b> 무전 수신:<br><audio controls src="${url}" class="audio-msg" ${autoPlay ? 'autoplay' : ''}></audio>`;
-            const chatBox = document.getElementById('chat-box');
+            div.innerHTML = `<b>[${id}]</b> 수신:<br><audio controls src="${url}" class="audio-msg" ${autoPlay ? 'autoplay' : ''}></audio>`;
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
