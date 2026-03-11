@@ -1,37 +1,34 @@
-/**
- * ╔══════════════════════════════════════════════════════════╗
- * ║ [LSA] LAYER: NETWORK / INFRASTRUCTURE                  ║
- * ║ [LMT] FLOW: Client (Full File) -> Server -> Broadcast  ║
- * ║ [PATH] C:\Users\55341\Desktop\PENG-Link\index.js        ║
- * ╚══════════════════════════════════════════════════════════╝
- */
-
+/* [📍 1] --------------------------------------------------- START */
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const ngrok = require('ngrok');
+const os = require('os');
 const { execSync } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
 
-/* ┌────────────────────────────────────────────────────────┐
-   │ [PRE-CHECK] KILL ZOMBIE PROCESSES                      │
-   └────────────────────────────────────────────────────────┘ */
-try {
-    console.log('🧹 [System] 기존 ngrok 프로세스 정리 중...');
-    if (process.platform === "win32") {
-        execSync('taskkill /f /im ngrok.exe', { stdio: 'ignore' });
-    } else {
-        execSync('pkill -f ngrok', { stdio: 'ignore' });
-    }
-} catch (e) { /* 프로세스 없으면 통과 */ }
+/* [📍 2] --------------------------------------------------- ZOMBIE CLEANUP */
+/* ------------------------------------------------------------ */
+/* [PORT(🚪🚪🚪)] SYSTEM ENTRY - ZOMBIE PROCESS CLEANUP         */
+/* ------------------------------------------------------------ */
+function killZombies() {
+    try {
+        if (process.platform === "win32") {
+            execSync('taskkill /f /im ngrok.exe', { stdio: 'ignore' });
+        } else {
+            execSync('pkill -f ngrok', { stdio: 'ignore' });
+        }
+    } catch (e) { /* 무시 */ }
+}
 
-/* ┌────────────────────────────────────────────────────────┐
-   │ [CORE] SOCKET.IO & SERVER CONFIGURATION                │
-   └────────────────────────────────────────────────────────┘ */
+/* [📍 3] --------------------------------------------------- SERVER CONFIG */
+/* ------------------------------------------------------------ */
+/* [SRV(🏗️🏗️🏗️)] SERVER ENGINE - STORAGE & CONFIGURATION          */
+/* ------------------------------------------------------------ */
 const io = new Server(server, {
     maxHttpBufferSize: 2e7,
     cors: { origin: "*" }
@@ -39,7 +36,9 @@ const io = new Server(server, {
 
 app.use(express.static('public'));
 const uploadsDir = path.join(__dirname, 'recordings');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
+/* [📍 4] --------------------------------------------------- FILE CLEANER */
 function clearServerFiles() {
     try {
         if (fs.existsSync(uploadsDir)) {
@@ -54,70 +53,84 @@ function clearServerFiles() {
     return 0;
 }
 
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-
-/* ┌────────────────────────────────────────────────────────┐
-   │ [SOCKET] REAL-TIME COMMUNICATION LOGIC                 │
-   └────────────────────────────────────────────────────────┘ */
+/* [📍 5] --------------------------------------------------- SOCKET CONNECTION */
+/* ------------------------------------------------------------ */
+/* [SIO_S(📡📡📡)] SOCKET SERVER - BROADCASTING LOGIC             */
+/* ------------------------------------------------------------ */
 io.on('connection', (socket) => {
     const penguinId = socket.id.substring(0, 5);
     console.log(`\n[${new Date().toLocaleTimeString()}] 🐧 [입장] 펭귄-${penguinId} 연결`);
 
+/* [📍 6] --------------------------------------------------- AUDIO SYNC */
     socket.on('sync-audio-file', (data) => {
         if (!data || !data.blob) return;
         socket.broadcast.emit('receive-sync-audio', { blob: data.blob, id: penguinId });
+        
         const fileName = `voice_${penguinId}_${Date.now()}.webm`;
         fs.writeFile(path.join(uploadsDir, fileName), Buffer.from(data.blob), (err) => {
-            if (!err) console.log(`💾 [${penguinId}] 서버 백업 완료`);
+            if (!err) checkServerStorageLimit();
         });
     });
 
+/* [📍 7] --------------------------------------------------- LOG CLEAR SIGNAL */
     socket.on('clear-logs-signal', () => {
-        clearServerFiles();
+        const count = clearServerFiles();
+        console.log(`🗑️ [System] ${penguinId}의 요청으로 서버 파일 ${count}개 삭제 완료`);
         io.emit('logs-cleared-notification', { by: penguinId });
     });
 
     socket.on('disconnect', () => console.log(`👋 [퇴장] 펭귄-${penguinId} 나감`));
 });
 
-/* ┌────────────────────────────────────────────────────────┐
-   │ [RUN] SERVER EXECUTION & AUTO TUNNELING                │
-   └────────────────────────────────────────────────────────┘ */
+/* [📍 8] --------------------------------------------------- STORAGE LIMIT */
+function checkServerStorageLimit() {
+    const files = fs.readdirSync(uploadsDir)
+                    .map(name => ({ name, time: fs.statSync(path.join(uploadsDir, name)).mtime.getTime() }))
+                    .sort((a, b) => a.time - b.time);
+
+    if (files.length > 100) {
+        const toDelete = files.slice(0, files.length - 100);
+        toDelete.forEach(f => fs.unlinkSync(path.join(uploadsDir, f.name)));
+        console.log(`♻️ [System] 서버 파일 ${toDelete.length}개 자동 정리`);
+    }
+}
+
+/* [📍 9] --------------------------------------------------- NETWORK INTERFACE */
+/* ------------------------------------------------------------ */
+/* [EXP(⚡⚡⚡)] MIDDLEWARE - HYBRID ACCESS (LOCAL & TUNNEL)       */
+/* ------------------------------------------------------------ */
 const PORT = process.env.PORT || 3000;
 const NGROK_TOKEN = '3AejqY6FPimvY0qdK0rMZOc93Xh_65jDvNEDfjmiVVHNY1Jov';
 
-server.listen(PORT, async () => {
-    console.log('\n' + '═'.repeat(50));
+server.listen(PORT, '0.0.0.0', async () => {
+    console.log('\n' + '═'.repeat(60));
     console.log(`🚀 PENG-Link CORE ENGINE START (PORT: ${PORT})`);
     
-    // 서버 시작 시 한 번만 파일 정리
     clearServerFiles();
+    killZombies();
 
-    /**
-     * NGROK 로직 (에러가 나도 서버 프로세스는 유지됨)
-     */
-    async function startNgrok() {
-        try {
-            // 1. 토큰 설정
-            await ngrok.authtoken(NGROK_TOKEN);
-            
-            // 2. 기존 연결 완전 종료 대기
-            await ngrok.kill();
-            await new Promise(res => setTimeout(res, 3000));
-            
-            // 3. 연결 시도 (포트 번호만 전달)
-            const url = await ngrok.connect(PORT);
-
-            console.log(`🔗 [TUNNEL] 외부 채널 생성 성공!`);
-            console.log(`📱 접속 주소: ${url}`);
-            console.log('═'.repeat(50) + '\n');
-        } catch (err) {
-            console.log(`❌ [ngrok] 연결 실패: ${err.message}`);
-            console.log(`⚠️ 현재는 로컬망(http://localhost:${PORT})만 사용 가능합니다.`);
-            console.log('═'.repeat(50) + '\n');
+    const nets = os.networkInterfaces();
+    let localIp = '';
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            if (net.family === 'IPv4' && !net.internal) localIp = net.address;
         }
     }
 
-    // ngrok 연결 시도가 서버 메인 스레드를 방해하지 않도록 비동기로 실행
-    startNgrok();
+/* [📍 10] --------------------------------------------------- NGROK RE-ENTRY */
+    console.log(`💻 [LOCAL] PC 접속: http://localhost:${PORT}`);
+    if (localIp) console.log(`📱 [WI-FI] 폰 접속: http://${localIp}:${PORT}`);
+
+    // ngrok 터널 재설정
+    (async function startNgrok() {
+        try {
+            await ngrok.authtoken(NGROK_TOKEN);
+            await ngrok.kill(); 
+            const url = await ngrok.connect({ proto: 'http', addr: PORT, region: 'jp' });
+            console.log(`🔗 [TUNNEL] 마이크 허용 접속(HTTPS): ${url}`);
+        } catch (err) {
+            console.log(`❌ [ngrok] 터널 생성 실패: ${err.message}`);
+        }
+        console.log('═'.repeat(60) + '\n');
+    })();
 });
